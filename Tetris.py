@@ -1,17 +1,17 @@
 import pygame
 import random
 
+#list of colors
 colors = [
     (0, 0, 0),
-    (255, 0, 0),
-    (255, 128, 0),
-    (255, 255, 0),
-    (0, 255, 0),
-    (0, 255, 255),
-    (0, 0, 255),
+    (190, 30, 17),
+    (226, 91, 106),
+    (255, 174, 170),
+    (171, 173, 63),
+    (231, 242, 182),
 ]
 
-
+#The Figure Class: holds a list of shapes and a figures position / type
 class Figure:
     x = 0
     y = 0
@@ -25,7 +25,8 @@ class Figure:
         [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],
         [[1, 2, 5, 6]],
     ]
-
+    
+    #Initilizes a figure
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -39,7 +40,7 @@ class Figure:
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.shapes[self.type])
 
-
+#The Tetris Class:
 class Tetris:
     level = 2
     score = 0
@@ -52,6 +53,7 @@ class Tetris:
     zoom = 20
     figure = None
 
+    #Initilizes a game of tetris
     def __init__(self, height, width):
         self.height = height
         self.width = width
@@ -64,9 +66,11 @@ class Tetris:
                 new_line.append(0)
             self.field.append(new_line)
 
+    #Creates a new figure
     def new_figure(self):
         self.figure = Figure(3, 0)
 
+    #Checks for intersection between blocks
     def intersects(self):
         intersection = False
         for i in range(4):
@@ -79,6 +83,7 @@ class Tetris:
                         intersection = True
         return intersection
 
+    #When a player clears lines
     def break_lines(self):
         lines = 0
         for i in range(1, self.height):
@@ -93,18 +98,21 @@ class Tetris:
                         self.field[i1][j] = self.field[i1 - 1][j]
         self.score += (lines ** 2) * 100
 
+    #Moves the figure to the bottom
     def go_space(self):
         while not self.intersects():
             self.figure.y += 1
         self.figure.y -= 1
         self.freeze()
 
+    #Moves the figure down
     def go_down(self):
         self.figure.y += 1
         if self.intersects():
             self.figure.y -= 1
             self.freeze()
 
+    
     def freeze(self):
         for i in range(4):
             for j in range(4):
@@ -115,12 +123,14 @@ class Tetris:
         if self.intersects():
             self.state = "gameover"
 
+    #Moves figure to left or right
     def go_side(self, dx):
         old_x = self.figure.x
         self.figure.x += dx
         if self.intersects():
             self.figure.x = old_x
 
+    #Rotates the figure
     def rotate(self):
         old_rotation = self.figure.rotation
         self.figure.rotate()
@@ -135,6 +145,7 @@ pygame.init()
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
+PINK = (255, 153, 255)
 
 size = (400, 500)
 screen = pygame.display.set_mode(size)
@@ -160,7 +171,8 @@ while not done:
     if counter % (fps // game.level // 2) == 0 or pressing_down:
         if game.state == "start":
             game.go_down()
-
+    
+    #Key Input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
@@ -182,8 +194,10 @@ while not done:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
 
-    screen.fill(BLACK)
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, (65,65,65), [game.x, game.y, game.zoom*game.width, game.zoom*game.height])
 
+    #Creates a grid of gray squares
     for i in range(game.height):
         for j in range(game.width):
             pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
@@ -191,6 +205,7 @@ while not done:
                 pygame.draw.rect(screen, colors[game.field[i][j]],
                                  [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
 
+    #Draws the figure on screen
     if game.figure is not None:
         for i in range(4):
             for j in range(4):
@@ -203,11 +218,13 @@ while not done:
 
     font = pygame.font.SysFont('Calibri', 25, True, False)
     font1 = pygame.font.SysFont('Calibri', 65, True, False)
-    text = font.render("Score: " + str(game.score), True, (0,128,255))
+    text = font.render("Score: " + str(game.score), True, (0,128,128))
+    text1 = font.render("Press ESC To RESET", True ,(255,0,0))
     text_game_over = font1.render("Game Over", True, (BLACK))
     text_game_over1 = font1.render("Press ESC", True, (BLACK))
 
     screen.blit(text, [0, 0])
+    screen.blit(text1, [200,0])
     if game.state == "gameover":
         screen.fill(WHITE)
         screen.blit(text_game_over, [50, 150])
